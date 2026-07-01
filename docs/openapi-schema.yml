@@ -782,11 +782,11 @@ components:
       required:
         - username
     UserWithRecipes:
+    email:    
       description: 'Расширенный объект пользователя с рецептами'
       type: object
       properties:
-        email:
-          type: string
+        type: string
           format: email
           maxLength: 254
           description: "Адрес электронной почты"
@@ -1126,7 +1126,7 @@ components:
       properties:
         auth_token:
           type: string
-    RecipeCreate:
+    
       type: object
       properties:
         id:
@@ -1140,7 +1140,7 @@ components:
               id: 1123
               amount: 10
             type: object
-            properties:
+            properties:RecipeCreate:
               id:
                 description: 'Уникальный id'
                 type: integer
