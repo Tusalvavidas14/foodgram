@@ -158,6 +158,10 @@ REST_FRAMEWORK = {
 
 CORS_URLS_REGEX = r'^/api/.*$'
 
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+CORS_ALLOWED_ORIGINS = [
+    origin for origin in os.environ.get(
+        'CORS_ALLOWED_ORIGINS', ''
+    ).split(',') if origin
+]
 # для разработки:
 CORS_ALLOW_ALL_ORIGINS = True
