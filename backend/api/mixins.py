@@ -1,3 +1,4 @@
+"""Переиспользуемые миксины для сериализаторов и вьюсетов api."""
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.response import Response
 
@@ -6,6 +7,7 @@ class PatchModelMixin:
     """Обеспечивает частичную модификацию объекта (`PATCH`)."""
 
     def partial_update(self, request, *args, **kwargs):
+        """Частично обновляет объект и возвращает его данные в ответе."""
         instance = self.get_object()
         partial = True
         serializer = self.get_serializer(
@@ -26,6 +28,7 @@ class UsernameValidationMixin:
     """Миксин, добавляющий валидацию поля username."""
 
     def validate_username(self, value):
+        """Запрещает регистрацию с зарезервированным именем "me"."""
         if value.lower() == 'me':
             raise serializers.ValidationError('Использовать "me" запрещено.')
         return value
@@ -39,4 +42,4 @@ class BaseCRUDViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-    pass
+    """Базовый вьюсет с созданием, чтением, обновлением и удалением."""

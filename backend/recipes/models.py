@@ -1,18 +1,20 @@
-from django.db import models
+"""Модели рецептов: ингредиенты, теги, рецепты, избранное и корзина."""
 from django.core.validators import MinValueValidator
-
+from django.db import models
 from foodgram_backend.constants import (
+    MAX_INGREDIENT_NAME,
     MAX_LENGHT_RECIPE_NAME,
     MAX_RECIPE_DESCRIPTION,
-    MAX_INGREDIENT_NAME,
     MAX_SLUG_IN_PROJECT,
-    MAX_UNIT_LENGHT,
     MAX_TAG_NAME,
+    MAX_UNIT_LENGHT,
 )
 from users.models import User
 
 
 class Ingredient(models.Model):
+    """Ингредиент из справочника с единицей измерения."""
+
     name = models.CharField(
         max_length=MAX_INGREDIENT_NAME,
         verbose_name="Ингредиент"
@@ -28,6 +30,8 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
+    """Тег, которым можно пометить рецепт (например, «завтрак»)."""
+
     name = models.CharField(
         max_length=MAX_TAG_NAME,
         verbose_name="Название тега"
@@ -44,6 +48,8 @@ class Tag(models.Model):
 
 
 class Recipe(models.Model):
+    """Рецепт: автор, описание, изображение, ингредиенты и теги."""
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -81,6 +87,8 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
+    """Связь рецепта с ингредиентом и его количеством в этом рецепте."""
+
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -107,6 +115,8 @@ class RecipeIngredient(models.Model):
 
 
 class Favorite(models.Model):
+    """Отметка «рецепт в избранном» у конкретного пользователя."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -129,7 +139,8 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    """""Модель корзины покупок."""
+    """Рецепт в списке покупок конкретного пользователя."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

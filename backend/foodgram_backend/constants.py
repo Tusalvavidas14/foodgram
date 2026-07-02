@@ -1,3 +1,5 @@
+"""Общие константы: ограничения длины полей моделей."""
+
 MAX_LENGHT_USERNAME = 150
 MAX_LENGHT_EMAIL = 254
 MAX_LENGHT_RECIPE_NAME = 256

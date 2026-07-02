@@ -1,3 +1,4 @@
-from django.db import models
+"""Модели приложения api.
 
-# Create your models here.
+Пока не используются: логика моделей вынесена в recipes и users.
+"""

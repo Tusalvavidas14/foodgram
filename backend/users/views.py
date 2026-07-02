@@ -1,3 +1,1 @@
-from django.shortcuts import render
-
-# Create your views here.
+"""Вьюхи приложения users (пока не используются, см. api.views)."""

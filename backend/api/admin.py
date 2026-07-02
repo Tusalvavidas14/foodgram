@@ -1,3 +1,1 @@
-from django.contrib import admin
-
-# Register your models here.
+"""Регистрация моделей приложения api в админке (пока не используется)."""

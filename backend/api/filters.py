@@ -1,9 +1,12 @@
+"""Фильтры для эндпоинтов ингредиентов и рецептов."""
 from rest_framework.filters import BaseFilterBackend
 
 
 class IngredientFilter(BaseFilterBackend):
-    """Фильтр для ингредиентов по частичному свопадению."""
+    """Фильтр для ингредиентов по частичному совпадению названия."""
+
     def filter_queryset(self, request, queryset, view):
+        """Оставляет только ингредиенты, чьё название начинается с ?name=."""
         name = request.query_params.get('name')
         if name:
             return queryset.filter(name__istartswith=name)
@@ -11,7 +14,10 @@ class IngredientFilter(BaseFilterBackend):
 
 
 class RecipeFilter(BaseFilterBackend):
+    """Фильтр рецептов по автору, тегам, избранному и списку покупок."""
+
     def filter_queryset(self, request, queryset, view):
+        """Применяет к queryset все переданные в запросе фильтры."""
         author = request.query_params.get('author')
         tags = request.query_params.getlist('tags')
         is_favorited = request.query_params.get('is_favorited')
