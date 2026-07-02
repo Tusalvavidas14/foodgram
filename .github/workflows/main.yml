@@ -72,14 +72,14 @@ jobs:
         with:
           context: ./backend/
           push: true
-          tags: Tusalvavidas14/foodgram-backend:latest
+          tags: tusalvavidas14/foodgram-backend:latest
     
       - name: Push frontend to DockerHub
         uses: docker/build-push-action@v4
         with:
           context: ./frontend/
           push: true
-          tags: Tusalvavidas14/foodgram-frontend:latest
+          tags: tusalvavidas14/foodgram-frontend:latest
         
   # ---------- CD: ДЕПЛОЙ НА СЕРВЕР ----------
   deploy:
