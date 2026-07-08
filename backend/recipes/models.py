@@ -1,6 +1,9 @@
 """Модели рецептов: ингредиенты, теги, рецепты, избранное и корзина."""
+
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.contrib.auth import get_user_model
+
 from foodgram_backend.constants import (
     MAX_INGREDIENT_NAME,
     MAX_LENGHT_RECIPE_NAME,
@@ -8,8 +11,10 @@ from foodgram_backend.constants import (
     MAX_SLUG_IN_PROJECT,
     MAX_TAG_NAME,
     MAX_UNIT_LENGHT,
+    MIN_COOKING_TIME,
 )
-from users.models import User
+
+User = get_user_model()
 
 
 class Ingredient(models.Model):
@@ -25,6 +30,12 @@ class Ingredient(models.Model):
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_name_measurement_unit'
+            ),
+        ]
         verbose_name = "Ингредиент"
         verbose_name_plural = "Ингредиенты"
 
@@ -78,7 +89,7 @@ class Recipe(models.Model):
         verbose_name='Теги'
     )
     cooking_time = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(MIN_COOKING_TIME)]
     )
 
     class Meta:
@@ -114,11 +125,36 @@ class RecipeIngredient(models.Model):
         verbose_name_plural = "Рецепты к ингредиентам"
 
 
-class Favorite(models.Model):
-    """Отметка «рецепт в избранном» у конкретного пользователя."""
+class BaseUserRecipeRelation(models.Model):
+    "Родительская модель для классов Favorite и ShoppingCart "
 
     user = models.ForeignKey(
         User,
+        on_delete=models.CASCADE,
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+    )
+
+    pub_date = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        abstract = True
+        constraints = [
+        models.UniqueConstraint(
+            fields=['user', 'recipe'],
+            name='%(app_label)s_%(class)s_unique_user_recipe'
+        ),
+        ]
+
+
+class Favorite(BaseUserRecipeRelation):
+    """Отметка «рецепт в избранном» у конкретного пользователя."""
+    user = models.ForeignKey( 
+        User, 
         on_delete=models.CASCADE,
         related_name="favorites"
     )
@@ -128,19 +164,13 @@ class Favorite(models.Model):
         related_name="favorites_recipes"
     )
 
-    pub_date = models.DateTimeField(
-        auto_now_add=True
-    )
-
-    class Meta:
-        unique_together = ['user', 'recipe']
+    class Meta(BaseUserRecipeRelation.Meta):
         verbose_name = "Избранный рецепт"
         verbose_name_plural = "Избранные рецепты"
 
 
-class ShoppingCart(models.Model):
+class ShoppingCart(BaseUserRecipeRelation):
     """Рецепт в списке покупок конкретного пользователя."""
-
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -148,16 +178,11 @@ class ShoppingCart(models.Model):
     )
 
     recipe = models.ForeignKey(
-        Recipe,
+        Recipe, 
         on_delete=models.CASCADE,
         related_name="recipe_cart"
     )
 
-    pub_date = models.DateTimeField(
-        auto_now_add=True
-    )
-
-    class Meta:
-        unique_together = ['user', 'recipe']
+    class Meta(BaseUserRecipeRelation.Meta):
         verbose_name = "Корзина покупок"
         verbose_name_plural = "Корзины покупок"

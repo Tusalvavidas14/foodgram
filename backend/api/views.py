@@ -1,9 +1,17 @@
 """Вьюсеты api: теги, ингредиенты, пользователи и рецепты."""
+
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
+from rest_framework import mixins, permissions, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count
+
 from recipes.models import (
     Favorite,
     Ingredient,
@@ -12,10 +20,6 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
-from rest_framework import mixins, permissions, viewsets
-from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
 from users.models import Follow
 
 from .filters import IngredientFilter, RecipeFilter
@@ -24,7 +28,7 @@ from .serializers import (
     AvatarSerializer,
     IngredientSerializer,
     RecipeCreateSerializer,
-    RecipeListSerializer,
+    RecipeReadSerializer,
     RecipeMinifiedSerializer,
     TagSerializer,
     UserSerializer,
@@ -54,7 +58,8 @@ class IngredientViewSet(
     queryset = Ingredient.objects.all().order_by('id')
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (IngredientFilter,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -99,7 +104,7 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscribe(self, request, id):
         """Подписывает (POST) или отписывает (DELETE) от указанного автора."""
-        author = get_object_or_404(User, id=id)
+        author = get_object_or_404(User.objects.annotate(recipes_count=Count('recipes')), id=id)
         if request.method == 'POST':
             if request.user == author:
                 return Response(
@@ -134,7 +139,7 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscriptions(self, request):
         """Возвращает постраничный список авторов, на которых подписан юзер."""
-        authors = User.objects.filter(followers__user=request.user)
+        authors = User.objects.filter(followers__user=request.user).annotate(recipes_count=Count('recipes'))
         page = self.paginate_queryset(authors)
         serializer = UserWithRecipesSerializer(
             page, many=True, context={'request': request}
@@ -150,13 +155,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly,
     ]
-    filter_backends = (RecipeFilter,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         """Для create/partial_update — сериализатор записи, иначе чтения."""
         if self.action in ('create', 'partial_update'):
             return RecipeCreateSerializer
-        return RecipeListSerializer
+        return RecipeReadSerializer
 
     def perform_create(self, serializer):
         """Привязывает создаваемый рецепт к текущему пользователю."""
@@ -260,5 +266,5 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_link(self, request, id):
         """Возвращает короткую ссылку на страницу рецепта."""
         recipe = get_object_or_404(Recipe, id=id)
-        link = request.build_absolute_uri(f'/recipes/{recipe.id}/')
+        link = request.build_absolute_uri(f'/s/{recipe.id}/')
         return Response({'short-link': link})

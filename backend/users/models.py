@@ -1,7 +1,9 @@
-"""Модели пользователей: кастомный User и подписки Follow."""
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
+
+from users.validators import validate_username
+
 from foodgram_backend.constants import MAX_LENGHT_EMAIL, MAX_LENGHT_USERNAME
 
 
@@ -11,7 +13,7 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=MAX_LENGHT_USERNAME,
         unique=True,
-        validators=[UnicodeUsernameValidator()],
+        validators=[validate_username],
         verbose_name='Имя пользователя'
     )
     first_name = models.CharField(
@@ -23,9 +25,12 @@ class User(AbstractUser):
     avatar = models.ImageField(
         upload_to='avatars/',
         blank=True,
-        null=True)
+        null=True
+    )
     email = models.EmailField(unique=True, max_length=MAX_LENGHT_EMAIL)
+
     USERNAME_FIELD = 'email'
+
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:
@@ -54,6 +59,15 @@ class Follow(models.Model):
     )
 
     class Meta:
-        unique_together = ["user", "author"]
+        constraints = [
+        models.UniqueConstraint(
+            fields=['user', 'author'],
+            name='unique_subscription'
+        ),
+        models.CheckConstraint(
+            check=~models.Q(user=models.F('author')),
+            name='prevent_self_subscription'
+        )
+        ]
         verbose_name = "Подписка"
         verbose_name_plural = "Подписки"

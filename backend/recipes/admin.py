@@ -1,5 +1,6 @@
 """Регистрация моделей recipes в админке."""
 from django.contrib import admin
+
 from recipes.models import (
     Favorite,
     Ingredient,
@@ -8,6 +9,13 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
+
+
+class RecipeIngredientInline(admin.TabularInline):
+    model = RecipeIngredient
+    min_num = 1
+    validate_min = True
+    extra = 1
 
 
 @admin.register(Ingredient)
@@ -25,17 +33,12 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'favorites_count')
     search_fields = ('author', 'name')
     list_filter = ('tags',)
+    inlines = (RecipeIngredientInline,)
 
+    @admin.display(description='В избранном')
     def favorites_count(self, obj):
         """Считает, сколько раз рецепт добавили в избранное."""
         return obj.favorites_recipes.count()
-
-
-@admin.register(RecipeIngredient)
-class RecipeIngredientAdmin(admin.ModelAdmin):
-    """Список связей рецепт-ингредиент с количеством."""
-
-    list_display = ('recipe', 'ingredient', 'amount')
 
 
 @admin.register(Favorite)
