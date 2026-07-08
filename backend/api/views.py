@@ -1,16 +1,15 @@
 """Вьюсеты api: теги, ингредиенты, пользователи и рецепты."""
 
 from django.contrib.auth import get_user_model
-from django.db.models import Sum
+from django.db.models import Count, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Count
 
 from recipes.models import (
     Favorite,
@@ -28,8 +27,8 @@ from .serializers import (
     AvatarSerializer,
     IngredientSerializer,
     RecipeCreateSerializer,
-    RecipeReadSerializer,
     RecipeMinifiedSerializer,
+    RecipeReadSerializer,
     TagSerializer,
     UserSerializer,
     UserWithRecipesSerializer,
@@ -104,7 +103,9 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscribe(self, request, id):
         """Подписывает (POST) или отписывает (DELETE) от указанного автора."""
-        author = get_object_or_404(User.objects.annotate(recipes_count=Count('recipes')), id=id)
+        author = get_object_or_404(
+            User.objects.annotate(recipes_count=Count('recipes')), id=id
+        )
         if request.method == 'POST':
             if request.user == author:
                 return Response(
@@ -139,7 +140,9 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscriptions(self, request):
         """Возвращает постраничный список авторов, на которых подписан юзер."""
-        authors = User.objects.filter(followers__user=request.user).annotate(recipes_count=Count('recipes'))
+        authors = User.objects.filter(
+            followers__user=request.user
+        ).annotate(recipes_count=Count('recipes'))
         page = self.paginate_queryset(authors)
         serializer = UserWithRecipesSerializer(
             page, many=True, context={'request': request}

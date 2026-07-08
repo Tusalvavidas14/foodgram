@@ -1,8 +1,8 @@
 """Модели рецептов: ингредиенты, теги, рецепты, избранное и корзина."""
 
+from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.contrib.auth import get_user_model
 
 from foodgram_backend.constants import (
     MAX_INGREDIENT_NAME,
@@ -144,17 +144,17 @@ class BaseUserRecipeRelation(models.Model):
     class Meta:
         abstract = True
         constraints = [
-        models.UniqueConstraint(
-            fields=['user', 'recipe'],
-            name='%(app_label)s_%(class)s_unique_user_recipe'
-        ),
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='%(app_label)s_%(class)s_unique_user_recipe'
+            ),
         ]
 
 
 class Favorite(BaseUserRecipeRelation):
     """Отметка «рецепт в избранном» у конкретного пользователя."""
-    user = models.ForeignKey( 
-        User, 
+    user = models.ForeignKey(
+        User,
         on_delete=models.CASCADE,
         related_name="favorites"
     )
@@ -178,7 +178,7 @@ class ShoppingCart(BaseUserRecipeRelation):
     )
 
     recipe = models.ForeignKey(
-        Recipe, 
+        Recipe,
         on_delete=models.CASCADE,
         related_name="recipe_cart"
     )

@@ -1,12 +1,11 @@
 """Сериализаторы api: пользователи, теги, ингредиенты и рецепты."""
-import base64
-
-from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerializer
-
 from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
+from djoser.serializers import (
+    UserCreateSerializer as DjoserUserCreateSerializer,
+)
 from rest_framework import serializers
 
+from api.fields import Base64ImageField
 from recipes.models import (
     Favorite,
     Ingredient,
@@ -16,8 +15,6 @@ from recipes.models import (
     Tag,
 )
 from users.models import Follow
-
-from api.fields import Base64ImageField
 
 User = get_user_model()
 
@@ -116,7 +113,9 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         return bool(
             request
             and request.user.is_authenticated
-            and Favorite.objects.filter(user=request.user, recipe=obj).exists()
+            and Favorite.objects.filter(
+                user=request.user, recipe=obj
+            ).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
@@ -125,7 +124,9 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         return bool(
             request
             and request.user.is_authenticated
-            and ShoppingCart.objects.filter(user=request.user, recipe=obj).exists()
+            and ShoppingCart.objects.filter(
+                user=request.user, recipe=obj
+            ).exists()
         )
 
     class Meta:

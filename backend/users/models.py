@@ -1,10 +1,8 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
-from users.validators import validate_username
-
 from foodgram_backend.constants import MAX_LENGHT_EMAIL, MAX_LENGHT_USERNAME
+from users.validators import validate_username
 
 
 class User(AbstractUser):
@@ -60,14 +58,14 @@ class Follow(models.Model):
 
     class Meta:
         constraints = [
-        models.UniqueConstraint(
-            fields=['user', 'author'],
-            name='unique_subscription'
-        ),
-        models.CheckConstraint(
-            check=~models.Q(user=models.F('author')),
-            name='prevent_self_subscription'
-        )
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_subscription'
+            ),
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('author')),
+                name='prevent_self_subscription'
+            )
         ]
         verbose_name = "Подписка"
         verbose_name_plural = "Подписки"

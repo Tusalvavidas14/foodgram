@@ -4,7 +4,8 @@ from recipes.models import Ingredient, Recipe, Tag
 
 
 class IngredientFilter(filters.FilterSet):
-    """Фильтр для ингредиентов по частичному совпадению названия.""" 
+    """Фильтр для ингредиентов по частичному совпадению названия."""
+
     name = filters.CharFilter(lookup_expr='istartswith')
 
     class Meta:
@@ -38,4 +39,3 @@ class RecipeFilter(filters.FilterSet):
         if value and self.request.user.is_authenticated:
             return queryset.filter(recipe_cart__user=self.request.user)
         return queryset
-
