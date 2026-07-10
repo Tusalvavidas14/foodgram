@@ -1,4 +1,3 @@
-"""Регистрация моделей recipes в админке."""
 from django.contrib import admin
 
 from recipes.models import (
@@ -32,7 +31,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'author', 'favorites_count')
     search_fields = ('author', 'name')
-    list_filter = ('tags',)
+    filter_horizontal = ('tags',)
     inlines = (RecipeIngredientInline,)
 
     @admin.display(description='В избранном')

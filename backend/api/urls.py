@@ -1,4 +1,3 @@
-"""URL-маршруты api: роутер DRF для тегов, пользователей и рецептов."""
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 

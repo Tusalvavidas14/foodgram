@@ -28,7 +28,6 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, max_length=MAX_LENGHT_EMAIL)
 
     USERNAME_FIELD = 'email'
-
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:

@@ -1,4 +1,3 @@
-"""Настройки Django-проекта foodgram_backend."""
 import os
 from pathlib import Path
 

@@ -1,5 +1,3 @@
-"""Модели рецептов: ингредиенты, теги, рецепты, избранное и корзина."""
-
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -11,6 +9,7 @@ from foodgram_backend.constants import (
     MAX_SLUG_IN_PROJECT,
     MAX_TAG_NAME,
     MAX_UNIT_LENGHT,
+    MIN_AMOUNT_INGREDIENTS,
     MIN_COOKING_TIME,
 )
 
@@ -89,7 +88,12 @@ class Recipe(models.Model):
         verbose_name='Теги'
     )
     cooking_time = models.PositiveIntegerField(
-        validators=[MinValueValidator(MIN_COOKING_TIME)]
+        validators=[
+            MinValueValidator(
+                MIN_COOKING_TIME,
+                message='Минимальное время приготовления - 1 минута'
+            )
+        ]
     )
 
     class Meta:
@@ -112,7 +116,7 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveIntegerField(
         validators=[
             MinValueValidator(
-                1,
+                MIN_AMOUNT_INGREDIENTS,
                 message='Количество ингредиента не может быть меньше 1'
             )
         ],
@@ -120,7 +124,12 @@ class RecipeIngredient(models.Model):
     )
 
     class Meta:
-        unique_together = ["recipe", "ingredient"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["recipe", "ingredient"],
+                name='unique_ingredient'
+            )
+        ]
         verbose_name = "Рецепт к ингредиенту"
         verbose_name_plural = "Рецепты к ингредиентам"
 
