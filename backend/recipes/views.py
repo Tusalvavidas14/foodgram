@@ -1,5 +1,4 @@
-from django.http import Http404
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import redirect
 
 from foodgram_backend.utils import hashids
 from recipes.models import Recipe
@@ -7,7 +6,6 @@ from recipes.models import Recipe
 
 def short_link_redirect(request, code):
     decoded = hashids.decode(code)
-    if not decoded:
-        raise Http404
-    recipe = get_object_or_404(Recipe, id=decoded[0])
-    return redirect(f'/recipes/{recipe.id}/')
+    if not decoded or not Recipe.objects.filter(id=decoded[0]).exists():
+        return redirect('/not_found/')
+    return redirect(f'/recipes/{decoded[0]}/')

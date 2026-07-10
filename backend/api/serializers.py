@@ -205,6 +205,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """Обновляет рецепт, полностью пересобирая теги и ингредиенты."""
         ingredients = validated_data.pop('ingredients', None)
         recipe = super().update(instance, validated_data)
+        tags = validated_data.pop('tags', None)
+
+        if tags is not None:
+            recipe.tags.set(tags)
 
         if ingredients is not None:
             recipe.ingredients.clear()

@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Sum
 from django.http import HttpResponse
@@ -49,7 +51,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Только чтение списка ингредиентов с поиском по названию."""
 
-    queryset = Ingredient.objects.all().order_by('id')
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
     filter_backends = (DjangoFilterBackend,)
@@ -94,7 +96,7 @@ class UserViewSet(DjoserUserViewSet):
             user.avatar.delete()
             user.avatar = None
             user.save()
-        return Response(status=204)
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(
         detail=True,
@@ -110,7 +112,7 @@ class UserViewSet(DjoserUserViewSet):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=201)
+        return Response(serializer.data, status=HTTPStatus.CREATED)
 
     @subscribe.mapping.delete
     def subscribe_delete(self, request, id):
@@ -120,8 +122,11 @@ class UserViewSet(DjoserUserViewSet):
             user=request.user, author=author
         ).delete()
         if not deleted:
-            return Response({'errors': 'Вы не были подписаны'}, status=400)
-        return Response(status=204)
+            return Response(
+                {'errors': 'Вы не были подписаны'},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     def get_queryset(self):
         """Для subscriptions — только авторы с подпиской.
@@ -130,7 +135,7 @@ class UserViewSet(DjoserUserViewSet):
         """
         if self.action == 'subscriptions':
             return User.objects.filter(
-                followers__user=self.request.user
+                followers__user=self.request.user.following.values('author')
             ).annotate(recipes_count=Count('recipes'))
         return super().get_queryset()
 
@@ -182,7 +187,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=201)
+        return Response(serializer.data, status=HTTPStatus.CREATED)
 
     def _remove_from(self, request, id, model, error_message):
         recipe = get_object_or_404(Recipe, id=id)
@@ -190,8 +195,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user=request.user, recipe=recipe
         ).delete()
         if not deleted:
-            return Response({'errors': error_message}, status=400)
-        return Response(status=204)
+            return Response(
+                {'errors': error_message}, status=HTTPStatus.BAD_REQUEST
+            )
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(
         detail=True,
@@ -225,9 +232,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             request, id, ShoppingCart, 'Рецепта нет в корзине'
         )
 
-    def _get_shopping_cart_content(self, user):
-        """Формирует текст со сводным списком покупок для пользователя."""
-        ingredients = RecipeIngredient.objects.filter(
+    def _get_shopping_cart_ingredients(self, user):
+        """Достаёт агрегированный список покупок из БД."""
+        return RecipeIngredient.objects.filter(
             recipe__recipe_cart__user=user
         ).values(
             'ingredient__name',
@@ -235,6 +242,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).annotate(
             total_amount=Sum('amount')
         )
+
+    def _render_shopping_cart_content(self, ingredients):
+        """Форматирует список покупок в текст."""
         content = 'Список покупок:\n\n'
         for item in ingredients:
             content += (
@@ -251,7 +261,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         """Отдаёт txt-файл со сводным списком покупок."""
-        content = self._get_shopping_cart_content(request.user)
+        ingredients = self._get_shopping_cart_ingredients(request.user)
+        content = self._render_shopping_cart_content(ingredients)
         response = HttpResponse(content, content_type='text/plain')
         response['Content-Disposition'] = (
             'attachment; filename="shopping_cart.txt"'
