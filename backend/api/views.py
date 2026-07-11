@@ -62,7 +62,7 @@ class UserViewSet(DjoserUserViewSet):
     """Пользователи: профиль, аватар и подписки на других авторов."""
 
     lookup_field = 'id'
-    queryset = User.objects.all().order_by('id')
+    queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def get_permissions(self):
@@ -134,8 +134,7 @@ class UserViewSet(DjoserUserViewSet):
         Иначе — стандартный queryset.
         """
         if self.action == 'subscriptions':
-            return User.objects.filter(
-                followers__user=self.request.user.following.values('author')
+            return User.objects.filter(self.request.user.following.values('author')
             ).annotate(recipes_count=Count('recipes'))
         return super().get_queryset()
 
