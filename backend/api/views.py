@@ -134,7 +134,8 @@ class UserViewSet(DjoserUserViewSet):
         Иначе — стандартный queryset.
         """
         if self.action == 'subscriptions':
-            return User.objects.filter(self.request.user.following.values('author')
+            return User.objects.filter(
+                self.request.user.following.values('author')
             ).annotate(recipes_count=Count('recipes'))
         return super().get_queryset()
 
