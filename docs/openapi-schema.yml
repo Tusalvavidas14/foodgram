@@ -782,11 +782,11 @@ components:
       required:
         - username
     UserWithRecipes:
-    email:    
       description: 'Расширенный объект пользователя с рецептами'
       type: object
       properties:
-        type: string
+        email:
+          type: string
           format: email
           maxLength: 254
           description: "Адрес электронной почты"
