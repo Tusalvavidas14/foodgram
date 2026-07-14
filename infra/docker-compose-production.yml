@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:13
+    restart: unless-stopped
     env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
@@ -12,6 +13,7 @@ services:
 
   backend:
     image: glebusshek/foodgram-backend:latest
+    restart: unless-stopped
     env_file: .env
     volumes:
       - static:/app/collected_static
@@ -31,6 +33,7 @@ services:
 
   nginx:
     image: nginx:1.25.4-alpine
+    restart: unless-stopped
     ports:
       - "80:80"
     volumes:
